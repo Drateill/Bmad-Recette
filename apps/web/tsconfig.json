@@ -1,0 +1,18 @@
+{
+  "extends": "../../packages/config/typescript/react.json",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "outDir": "./dist",
+    "paths": {
+      "@bmad/shared": ["../../packages/shared/src"],
+      "@bmad/shared/*": ["../../packages/shared/src/*"],
+      "@bmad/ui": ["../../packages/ui/src"],
+      "@bmad/ui/*": ["../../packages/ui/src/*"]
+    }
+  },
+  "include": ["src"],
+  "references": [
+    { "path": "../../packages/shared" },
+    { "path": "../../packages/ui" }
+  ]
+}
