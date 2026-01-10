@@ -1,0 +1,218 @@
+name: PR Validation
+
+on:
+  push:
+    branches-ignore:
+      - main
+      - master
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  install:
+    name: Install Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Cache node_modules
+        uses: actions/cache/save@v3
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
+
+  lint:
+    name: Lint Code
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Restore node_modules cache
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run lint
+        run: npm run lint --workspace=@bmad/api
+
+  type-check:
+    name: TypeScript Type Check
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Restore node_modules cache
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run type check
+        run: npm run type-check --workspace=@bmad/api
+
+  test:
+    name: Run Tests
+    needs: install
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: bmad
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: bmad_recette_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Restore node_modules cache
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run database migrations
+        working-directory: apps/api
+        env:
+          DATABASE_URL: postgresql://bmad:test_password@localhost:5432/bmad_recette_test
+        run: npx prisma migrate deploy
+
+      - name: Run tests with coverage
+        working-directory: apps/api
+        env:
+          DATABASE_URL: postgresql://bmad:test_password@localhost:5432/bmad_recette_test
+          REDIS_URL: redis://localhost:6379
+          NODE_ENV: test
+          PORT: 3001
+          API_VERSION: 0.1.0
+          CORS_ORIGINS: http://localhost:5173,http://localhost:3000
+          LOG_LEVEL: error
+          JWT_SECRET: test-secret-key
+        run: npm run test:cov
+
+      - name: Check coverage thresholds
+        working-directory: apps/api
+        run: |
+          echo "Checking test coverage meets 70% threshold..."
+          npm run test:cov 2>&1 | tee coverage-output.txt
+          if grep -q "ERROR" coverage-output.txt; then
+            echo "Coverage threshold not met"
+            exit 1
+          fi
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        if: always()
+        with:
+          directory: ./apps/api/coverage
+          flags: api
+          name: api-coverage
+          fail_ci_if_error: false
+
+  build:
+    name: Build Application
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Restore node_modules cache
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            node_modules
+            apps/*/node_modules
+            packages/*/node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build API
+        run: npm run build --workspace=@bmad/api
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: api-build
+          path: apps/api/dist
+          retention-days: 1

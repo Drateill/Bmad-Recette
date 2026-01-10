@@ -1,38 +1,22 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { Provider as PaperProvider } from 'react-native-paper';
+import { RootNavigator } from './src/navigation/AppNavigator';
+import { initializeAuth, useAuthRestore } from './src/hooks/useAuth';
 
 export default function App() {
+  // Initialize auth implementations on app start
+  useEffect(() => {
+    initializeAuth();
+  }, []);
+
+  // Restore auth state from secure storage
+  useAuthRestore();
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>BMad Recette</Text>
-      <Text style={styles.subtitle}>Recipe Management Mobile App</Text>
-      <Text style={styles.version}>Version: 0.1.0</Text>
+    <PaperProvider>
+      <RootNavigator />
       <StatusBar style="auto" />
-    </View>
+    </PaperProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 5,
-  },
-  version: {
-    fontSize: 12,
-    color: '#999',
-  },
-});

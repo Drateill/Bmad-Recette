@@ -3,6 +3,7 @@
     "name": "BMad Recette",
     "slug": "bmad-recette",
     "version": "0.1.0",
+    "scheme": "bmadrecette",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -27,6 +28,11 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "apiBaseUrl": "http://localhost:3001",
+      "googleClientId": "your-google-client-id.apps.googleusercontent.com",
+      "appleClientId": "com.bmad.recette.signin"
     }
   }
 }

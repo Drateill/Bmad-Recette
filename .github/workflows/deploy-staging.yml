@@ -1,0 +1,142 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for manual deployment'
+        required: false
+        type: string
+
+jobs:
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build API
+        run: npm run build --workspace=@bmad/api
+
+      - name: Upload API build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: api-build
+          path: apps/api/dist
+          retention-days: 7
+
+  deploy-api:
+    name: Deploy API to Staging
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download API build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: api-build
+          path: apps/api/dist
+
+      - name: Deploy to Railway (Staging)
+        id: deploy
+        if: vars.DEPLOYMENT_PLATFORM == 'railway'
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          echo "Deploying API to Railway staging environment..."
+          # Install Railway CLI
+          npm install -g @railway/cli
+          # Deploy to staging
+          cd apps/api
+          railway up --service api --environment staging
+          # Get deployment URL
+          URL=$(railway status --service api --environment staging --json | jq -r '.url')
+          echo "url=$URL" >> $GITHUB_OUTPUT
+          echo "Deployed to: $URL"
+
+      - name: Deploy to Render (Staging)
+        id: deploy-render
+        if: vars.DEPLOYMENT_PLATFORM == 'render'
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID_STAGING }}
+        run: |
+          echo "Deploying API to Render staging environment..."
+          # Trigger Render deployment
+          curl -X POST "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys" \
+            -H "Authorization: Bearer $RENDER_API_KEY" \
+            -H "Content-Type: application/json"
+          echo "Deployment triggered on Render"
+
+      - name: Run database migrations
+        if: success()
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL_STAGING }}
+        run: |
+          cd apps/api
+          npx prisma migrate deploy
+          echo "Database migrations applied successfully"
+
+      - name: Health check
+        if: success()
+        run: |
+          echo "Waiting for deployment to be ready..."
+          sleep 30
+          HEALTH_URL="${{ steps.deploy.outputs.url || vars.STAGING_API_URL }}/api/health"
+          echo "Checking health endpoint: $HEALTH_URL"
+
+          MAX_RETRIES=10
+          RETRY_COUNT=0
+
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            if curl -f -s "$HEALTH_URL" | jq -e '.status == "ok"' > /dev/null; then
+              echo "✅ Health check passed!"
+              exit 0
+            fi
+            echo "Health check attempt $((RETRY_COUNT + 1))/$MAX_RETRIES failed, retrying..."
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            sleep 10
+          done
+
+          echo "❌ Health check failed after $MAX_RETRIES attempts"
+          exit 1
+
+      - name: Notify deployment success
+        if: success()
+        run: |
+          echo "🎉 Staging deployment successful!"
+          echo "API URL: ${{ steps.deploy.outputs.url || vars.STAGING_API_URL }}"
+
+      - name: Notify deployment failure
+        if: failure()
+        run: |
+          echo "❌ Staging deployment failed!"
+          echo "Check the logs above for details"
+
+  # Placeholder for web app deployment (Story 1.4+)
+  # deploy-web:
+  #   name: Deploy Web App to Vercel
+  #   needs: build
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Deploy to Vercel
+  #       run: echo "Web app deployment will be implemented in future story"

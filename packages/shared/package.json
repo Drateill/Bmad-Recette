@@ -15,6 +15,11 @@
       "types": "./dist/types/index.d.ts",
       "import": "./dist/types/index.mjs",
       "require": "./dist/types/index.js"
+    },
+    "./schemas": {
+      "types": "./src/schemas/authSchemas.ts",
+      "import": "./src/schemas/authSchemas.ts",
+      "require": "./src/schemas/authSchemas.ts"
     }
   },
   "scripts": {
@@ -26,5 +31,10 @@
   "devDependencies": {
     "tsup": "8.0.1",
     "typescript": "5.3.3"
+  },
+  "dependencies": {
+    "@react-navigation/native-stack": "^7.9.0",
+    "zod": "^4.3.5",
+    "zustand": "^5.0.9"
   }
 }

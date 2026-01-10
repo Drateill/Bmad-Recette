@@ -1,5 +1,9 @@
 # BMad Recette
 
+[![PR Validation](https://github.com/USERNAME/bmad-recette/actions/workflows/pr-validation.yml/badge.svg)](https://github.com/USERNAME/bmad-recette/actions/workflows/pr-validation.yml)
+[![Deploy to Staging](https://github.com/USERNAME/bmad-recette/actions/workflows/deploy-staging.yml/badge.svg)](https://github.com/USERNAME/bmad-recette/actions/workflows/deploy-staging.yml)
+[![codecov](https://codecov.io/gh/USERNAME/bmad-recette/branch/main/graph/badge.svg)](https://codecov.io/gh/USERNAME/bmad-recette)
+
 A modern recipe management application built with TypeScript, React, React Native, and NestJS in a monorepo structure.
 
 ## Overview
@@ -190,6 +194,17 @@ Build outputs:
 - **API**: `apps/api/dist/`
 - **Mobile**: Built via Expo (see Expo documentation)
 
+## CI/CD
+
+This project uses GitHub Actions for continuous integration and deployment:
+
+- **PR Validation**: Automatically runs lint, type-check, tests, and build on every pull request
+- **Staging Deployment**: Automatically deploys to staging environment when code is merged to main
+- **Test Coverage**: Enforces minimum 70% code coverage threshold
+- **Branch Protection**: Main branch is protected and requires all checks to pass before merging
+
+For detailed workflow documentation, see [.github/WORKFLOWS.md](.github/WORKFLOWS.md).
+
 ## Contributing
 
 1. Create a feature branch from `main`
@@ -198,6 +213,7 @@ Build outputs:
 4. Ensure linting passes: `npm run lint`
 5. Commit your changes (pre-commit hooks will run automatically)
 6. Push and create a pull request
+7. Wait for CI checks to pass before requesting review
 
 ## License
 
