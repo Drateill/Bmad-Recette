@@ -20,6 +20,8 @@ model User {
   lastSyncedAt DateTime @default(now()) @map("last_synced_at") @db.Timestamptz
 
   oauthProviders OAuthProvider[]
+  recipes        Recipe[]
+  tags           Tag[]
 
   @@index([email])
   @@map("users")
@@ -38,4 +40,143 @@ model OAuthProvider {
   @@unique([provider, providerId])
   @@index([provider, email])
   @@map("oauth_providers")
+}
+
+model Recipe {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  title       String   @db.VarChar(255)
+  description String?  @db.Text
+  prepTime    Int      @map("prep_time")
+  cookTime    Int      @map("cook_time")
+  servings    Int
+  rating      Int?
+  source      String?  @db.VarChar(255)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz
+  version     Int      @default(1)
+
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ingredients RecipeIngredient[]
+  steps       RecipeStep[]
+  photos      RecipePhoto[]
+  tags        RecipeTag[]
+
+  @@index([userId])
+  @@index([title])
+  @@map("recipes")
+}
+
+model Ingredient {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String   @unique @db.VarChar(255)
+  category     String   @db.VarChar(100)
+  commonUnits  String[] @map("common_units")
+  averagePrice Float?   @map("average_price")
+  priceUnit    String?  @map("price_unit") @db.VarChar(50)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  recipeIngredients RecipeIngredient[]
+
+  @@index([name])
+  @@map("ingredients")
+}
+
+model RecipeIngredient {
+  id             String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  recipeId       String  @map("recipe_id") @db.Uuid
+  ingredientId   String? @map("ingredient_id") @db.Uuid
+  ingredientName String  @map("ingredient_name") @db.VarChar(255)
+  quantity       Float
+  unit           String  @db.VarChar(50)
+  notes          String? @db.Text
+  sortOrder      Int     @map("sort_order")
+
+  recipe     Recipe      @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  ingredient Ingredient? @relation(fields: [ingredientId], references: [id])
+
+  @@index([recipeId])
+  @@index([ingredientId])
+  @@map("recipe_ingredients")
+}
+
+model RecipeStep {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  recipeId    String   @map("recipe_id") @db.Uuid
+  stepNumber  Int      @map("step_number")
+  instruction String   @db.Text
+  duration    Int?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@index([recipeId])
+  @@map("recipe_steps")
+}
+
+model RecipePhoto {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  recipeId     String   @map("recipe_id") @db.Uuid
+  s3Url        String   @map("s3_url") @db.VarChar(512)
+  thumbnailUrl String   @map("thumbnail_url") @db.VarChar(512)
+  isPrimary    Boolean  @default(false) @map("is_primary")
+  fileSize     Int      @map("file_size")
+  width        Int
+  height       Int
+  uploadedAt   DateTime @default(now()) @map("uploaded_at") @db.Timestamptz
+
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+
+  @@index([recipeId])
+  @@map("recipe_photos")
+}
+
+model TagCategory {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String   @db.VarChar(100)
+  slug      String   @unique @db.VarChar(100)
+  sortOrder Int      @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  tags Tag[]
+
+  @@map("tag_categories")
+}
+
+model Tag {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  categoryId String   @map("category_id") @db.Uuid
+  name       String   @db.VarChar(100)
+  slug       String   @db.VarChar(100)
+  isSystem   Boolean  @default(false) @map("is_system")
+  userId     String?  @map("user_id") @db.Uuid
+  color      String?  @db.VarChar(7)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  category TagCategory @relation(fields: [categoryId], references: [id])
+  user     User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipes  RecipeTag[]
+
+  @@unique([categoryId, slug])
+  @@unique([categoryId, slug, userId])
+  @@index([categoryId])
+  @@index([userId])
+  @@index([slug])
+  @@map("tags")
+}
+
+model RecipeTag {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  recipeId  String   @map("recipe_id") @db.Uuid
+  tagId     String   @map("tag_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  recipe Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([recipeId, tagId])
+  @@index([recipeId])
+  @@index([tagId])
+  @@index([recipeId, tagId])
+  @@map("recipe_tags")
 }

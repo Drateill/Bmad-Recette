@@ -9,6 +9,9 @@ import { DatabaseModule } from './database/database.module';
 import { RedisModule } from './redis/redis.module';
 import { HealthModule } from './health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { TagsModule } from './modules/tags/tags.module';
+import { RecipesModule } from './modules/recipes/recipes.module';
+import { RecipePhotosModule } from './modules/recipe-photos/recipe-photos.module';
 
 @Module({
   imports: [
@@ -45,6 +48,9 @@ import { AuthModule } from './modules/auth/auth.module';
     RedisModule,
     HealthModule,
     AuthModule,
+    TagsModule,
+    RecipesModule,
+    RecipePhotosModule,
   ],
   controllers: [AppController],
   providers: [AppService],
