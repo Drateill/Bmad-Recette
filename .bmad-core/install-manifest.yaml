@@ -1,9 +1,9 @@
 version: 4.44.3
-installed_at: '2026-01-05T19:04:34.312Z'
+installed_at: '2026-01-14T13:11:34.851Z'
 install_type: full
 agent: null
 ides_setup:
-  - claude-code
+  - codex
 expansion_packs: []
 files:
   - path: .bmad-core/working-in-the-brownfield.md
@@ -16,7 +16,7 @@ files:
     hash: 39beb3516c070e2b
     modified: false
   - path: .bmad-core/core-config.yaml
-    hash: 073cf6d2527c545d
+    hash: 94ce5b2faad48235
     modified: false
   - path: .bmad-core/workflows/greenfield-ui.yaml
     hash: 2b595f235c095790
@@ -186,18 +186,6 @@ files:
   - path: .bmad-core/checklists/architect-checklist.md
     hash: 15ef7d01b0e31c3f
     modified: false
-  - path: .bmad-core/agent-teams/team-no-ui.yaml
-    hash: 00cbffc4106cbe1e
-    modified: false
-  - path: .bmad-core/agent-teams/team-ide-minimal.yaml
-    hash: 424972103dfde87d
-    modified: false
-  - path: .bmad-core/agent-teams/team-fullstack.yaml
-    hash: 14c7a2d8bc7ceb6f
-    modified: false
-  - path: .bmad-core/agent-teams/team-all.yaml
-    hash: db5b0ff0a9c9c2e8
-    modified: false
   - path: .bmad-core/agents/ux-expert.md
     hash: 5de34d36ca9a747c
     modified: false
@@ -227,4 +215,16 @@ files:
     modified: false
   - path: .bmad-core/agents/analyst.md
     hash: 220103a5b3af7eb1
+    modified: false
+  - path: .bmad-core/agent-teams/team-no-ui.yaml
+    hash: 00cbffc4106cbe1e
+    modified: false
+  - path: .bmad-core/agent-teams/team-ide-minimal.yaml
+    hash: 424972103dfde87d
+    modified: false
+  - path: .bmad-core/agent-teams/team-fullstack.yaml
+    hash: 14c7a2d8bc7ceb6f
+    modified: false
+  - path: .bmad-core/agent-teams/team-all.yaml
+    hash: db5b0ff0a9c9c2e8
     modified: false

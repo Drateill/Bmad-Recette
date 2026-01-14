@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { getCurrentUser } from '../services/authService';
+import { isOnboardingComplete } from '../utils/onboarding';
 
 export default function AuthSuccessPage() {
   const [searchParams] = useSearchParams();
@@ -38,8 +39,10 @@ export default function AuthSuccessPage() {
         // Remove token from URL (security)
         window.history.replaceState({}, document.title, '/auth/success');
 
-        // Redirect to recipes page
-        navigate('/recipes', { replace: true });
+        // Redirect to onboarding or recipes
+        navigate(isOnboardingComplete() ? '/recipes' : '/onboarding', {
+          replace: true,
+        });
       } catch (err: any) {
         console.error('OAuth callback error:', err);
         setError('Failed to complete authentication. Please try signing in with email/password.');
@@ -52,20 +55,22 @@ export default function AuthSuccessPage() {
   }, [searchParams, navigate, setAccessToken, setUser, clearAuth]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full text-center space-y-4">
+    <div className="min-h-screen bg-surface-base flex items-center justify-center px-4">
+      <div className="w-full max-w-md space-y-4 text-center">
         {error ? (
           <>
-            <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded">
+            <div className="rounded-xl border border-brand-error/40 bg-brand-error/10 px-4 py-3 text-sm text-brand-error">
               {error}
             </div>
-            <p className="text-sm text-gray-600">Redirecting to login...</p>
+            <p className="text-sm text-text-muted">Redirecting to login...</p>
           </>
         ) : (
           <>
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-            <h2 className="text-xl font-semibold text-gray-700">Completing sign in...</h2>
-            <p className="text-sm text-gray-600">Please wait while we set up your account.</p>
+            <div className="mx-auto h-12 w-12 animate-spin rounded-full border-2 border-brand-primary border-t-transparent"></div>
+            <h2 className="text-xl font-semibold text-text-primary">Completing sign in...</h2>
+            <p className="text-sm text-text-muted">
+              Please wait while we set up your account.
+            </p>
           </>
         )}
       </div>

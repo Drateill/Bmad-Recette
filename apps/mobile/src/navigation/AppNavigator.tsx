@@ -4,7 +4,9 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuthStore } from '@bmad/shared/stores/authStore';
 import { LoginScreen } from '../screens/LoginScreen';
 import { RegisterScreen } from '../screens/RegisterScreen';
-import { RecipesScreen } from '../screens/RecipesScreen';
+import { RecipeLibrary } from '../screens/RecipeLibrary';
+import { RecipeDetail } from '../screens/RecipeDetail';
+import { RecipeEdit } from '../screens/RecipeEdit';
 
 /**
  * Auth Stack Parameter List
@@ -18,7 +20,9 @@ export type AuthStackParamList = {
  * App Stack Parameter List
  */
 export type AppStackParamList = {
-  Recipes: undefined;
+  RecipeLibrary: undefined;
+  RecipeDetail: { recipeId: string };
+  RecipeEdit: { recipeId: string };
 };
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -45,11 +49,26 @@ function AuthNavigator() {
  */
 function AppNavigator() {
   return (
-    <AppStack.Navigator>
+    <AppStack.Navigator
+      screenOptions={{
+        gestureEnabled: true,
+        gestureDirection: 'horizontal',
+      }}
+    >
       <AppStack.Screen
-        name="Recipes"
-        component={RecipesScreen}
+        name="RecipeLibrary"
+        component={RecipeLibrary}
         options={{ title: 'BMad Recette' }}
+      />
+      <AppStack.Screen
+        name="RecipeDetail"
+        component={RecipeDetail}
+        options={{ title: 'Recipe' }}
+      />
+      <AppStack.Screen
+        name="RecipeEdit"
+        component={RecipeEdit}
+        options={{ title: 'Edit Recipe' }}
       />
     </AppStack.Navigator>
   );

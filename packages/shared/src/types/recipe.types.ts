@@ -176,11 +176,29 @@ export interface RecipeListItem {
   totalTime: number;
   servings: number;
   rating: number | null;
-  primaryPhoto: RecipePhoto | null;
-  ingredientCount: number;
-  stepCount: number;
-  createdAt: Date;
-  updatedAt: Date;
+  primaryPhoto: {
+    id: string;
+    thumbnailUrl: string;
+  } | null;
+  tagIds: string[];
+}
+
+/**
+ * Pagination metadata for list responses
+ */
+export interface PaginationMeta {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}
+
+/**
+ * Recipe list response with pagination
+ */
+export interface RecipeListResponse {
+  data: RecipeListItem[];
+  pagination: PaginationMeta;
 }
 
 /**

@@ -484,4 +484,46 @@ export class AuthService {
       });
     }
   }
+
+  /**
+   * Development-only login method for E2E testing
+   * Generates a JWT token for any user by email without password verification
+   * @param email - User email
+   * @returns User object with access token
+   * @throws UnauthorizedException if user not found
+   */
+  async devLogin(email: string): Promise<{ user: any; accessToken: string }> {
+    // Find user by email
+    const user = await this.authRepository.findByEmail(email);
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    // Generate only access token (no refresh token needed for E2E tests)
+    const jwtSecret =
+      this.configService.get<string>('jwt.secret') ||
+      'development-secret-change-in-production';
+    const accessTokenExpiration =
+      this.configService.get<string>('jwt.accessTokenExpiration') || '15m';
+
+    const accessToken = generateAccessToken(
+      user.id,
+      user.email,
+      jwtSecret,
+      accessTokenExpiration,
+    );
+
+    this.logger.log({
+      event: 'dev_login_success',
+      userId: user.id,
+      email: user.email,
+      timestamp: new Date().toISOString(),
+    });
+
+    return {
+      user: this.formatUserResponse(user),
+      accessToken,
+    };
+  }
 }

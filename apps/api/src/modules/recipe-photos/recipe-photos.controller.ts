@@ -13,17 +13,19 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { RecipePhotosService } from './recipe-photos.service';
 import { ValidateImagePipe } from './dto/validate-image.pipe';
 import { PhotoResponseDto } from './dto/photo-response.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 
 @Controller('recipes/:recipeId/photos')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, ThrottlerGuard)
 export class RecipePhotosController {
   constructor(private recipePhotosService: RecipePhotosService) {}
 
   @Post()
+  @Throttle({ default: { limit: 10, ttl: 3600000 } }) // 10 uploads per hour
   @UseInterceptors(
     FileInterceptor('photo', {
       limits: {

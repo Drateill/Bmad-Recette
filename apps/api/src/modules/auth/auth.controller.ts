@@ -279,4 +279,28 @@ export class AuthController {
 
     // Return 204 No Content (handled by @HttpCode decorator)
   }
+
+  /**
+   * Development-only login endpoint for E2E testing
+   * POST /api/auth/dev-login
+   * Creates a JWT token for any user by email without password verification
+   * ONLY AVAILABLE IN NON-PRODUCTION ENVIRONMENTS
+   */
+  @Post('dev-login')
+  @HttpCode(HttpStatus.OK)
+  async devLogin(@Body() body: { email: string }) {
+    const nodeEnv = this.configService.get<string>('app.nodeEnv') || 'development';
+
+    // Block in production
+    if (nodeEnv === 'production') {
+      throw new UnauthorizedException('Dev login not available in production');
+    }
+
+    const result = await this.authService.devLogin(body.email);
+
+    return {
+      user: result.user,
+      accessToken: result.accessToken,
+    };
+  }
 }

@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import {
   S3Client,
   PutObjectCommand,
@@ -9,6 +9,7 @@ import { randomUUID } from 'crypto';
 
 @Injectable()
 export class StorageService {
+  private readonly logger = new Logger(StorageService.name);
   private s3Client: S3Client;
   private bucketName: string;
   private region: string;
@@ -72,7 +73,10 @@ export class StorageService {
       await this.s3Client.send(command);
     } catch (error) {
       // Log error but don't throw - file might already be deleted
-      console.error(`Failed to delete S3 object: ${key}`, error);
+      this.logger.error(
+        `Failed to delete S3 object`,
+        error instanceof Error ? error.stack : String(error),
+      );
     }
   }
 

@@ -3,6 +3,8 @@ import { BadRequestException } from '@nestjs/common';
 import { RecipesService } from '../../src/modules/recipes/recipes.service';
 import { RecipesRepository } from '../../src/modules/recipes/recipes.repository';
 import { PrismaService } from '../../src/database/prisma.service';
+import { PortionAdjustmentService } from '../../src/modules/recipes/portion-adjustment.service';
+import { StorageService } from '../../src/modules/storage/storage.service';
 import { CreateRecipeDto } from '../../src/modules/recipes/dto/create-recipe.dto';
 
 describe('RecipesService', () => {
@@ -33,6 +35,16 @@ describe('RecipesService', () => {
         {
           provide: PrismaService,
           useValue: mockPrismaService,
+        },
+        {
+          provide: StorageService,
+          useValue: {},
+        },
+        {
+          provide: PortionAdjustmentService,
+          useValue: {
+            adjustIngredients: jest.fn(),
+          },
         },
       ],
     }).compile();

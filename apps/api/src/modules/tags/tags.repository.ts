@@ -160,4 +160,20 @@ export class TagsRepository {
       where: { id: recipeId },
     });
   }
+
+  /**
+   * Find tags by their slugs (for template tag resolution)
+   * @param slugs - Array of tag slugs to find
+   * @returns Array of tags that match the slugs
+   */
+  async findBySlug(slugs: string[]): Promise<Tag[]> {
+    return this.prisma.tag.findMany({
+      where: {
+        slug: {
+          in: slugs,
+        },
+        isSystem: true, // Only system tags for templates
+      },
+    });
+  }
 }

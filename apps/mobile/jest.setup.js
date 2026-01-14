@@ -42,3 +42,9 @@ global.console = {
   warn: jest.fn(),
   error: jest.fn(),
 };
+
+// Mock reanimated for tests using animated components (e.g. FAB Group)
+jest.mock('react-native-reanimated', () =>
+  require('react-native-reanimated/mock')
+);
+jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper');

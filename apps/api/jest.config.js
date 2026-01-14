@@ -7,6 +7,7 @@ module.exports = {
       tsconfig: {
         types: ['jest', 'node'],
       },
+      isolatedModules: true,
     }],
   },
   collectCoverageFrom: [
@@ -32,4 +33,5 @@ module.exports = {
   moduleNameMapper: {
     '^src/(.*)$': '<rootDir>/src/$1',
   },
+  preset: 'ts-jest',
 };

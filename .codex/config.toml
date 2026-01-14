@@ -1,0 +1,5 @@
+[projects."/home/drateil"]
+trust_level = "trusted"
+
+[projects."/home/drateil/bmad-recette"]
+trust_level = "trusted"

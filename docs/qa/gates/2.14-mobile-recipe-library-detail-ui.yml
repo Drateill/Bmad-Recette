@@ -1,0 +1,58 @@
+schema: 1
+story: '2.14'
+story_title: 'Mobile Recipe Library & Detail UI'
+gate: CONCERNS
+status_reason: 'Core UI is implemented, but Edit/Share actions are stubbed and several acceptance criteria lack test coverage.'
+reviewer: 'Quinn (Test Architect)'
+updated: '2026-01-14T14:10:25Z'
+
+top_issues:
+  - id: 'ac7-actions-stubbed'
+    severity: medium
+    description: 'Edit and Share FAB actions log to console instead of performing navigation/share behavior.'
+    refs: ['apps/mobile/src/screens/RecipeDetail.tsx']
+    suggested_owner: dev
+  - id: 'test-coverage-gaps'
+    severity: medium
+    description: 'Missing tests for recipe detail UI, FAB behaviors, slider/filter apply, and swipe-back gesture.'
+    refs:
+      - 'apps/mobile/src/screens/__tests__/RecipeLibrary.spec.tsx'
+      - 'apps/mobile/src/screens/__tests__/RecipeDetail.spec.tsx'
+    suggested_owner: dev
+
+waiver:
+  active: false
+
+quality_score: 80
+expires: '2026-01-28T14:10:25Z'
+
+evidence:
+  tests_reviewed: 2
+  risks_identified: 2
+  trace:
+    ac_covered: [1, 3, 4, 5, 9]
+    ac_gaps: [2, 6, 7, 8, 10]
+
+nfr_validation:
+  security:
+    status: PASS
+    notes: 'UI-only changes; no auth or sensitive data handling added.'
+  performance:
+    status: PASS
+    notes: 'FlatList usage and lightweight UI patterns; no heavy processing observed.'
+  reliability:
+    status: PASS
+    notes: 'Error states present for recipe data; no new crash paths found.'
+  maintainability:
+    status: PASS
+    notes: 'Clear component structure and typed hooks; minimal coupling.'
+
+recommendations:
+  immediate:
+    - action: 'Implement Edit navigation and Share behavior for FAB actions'
+      refs: ['apps/mobile/src/screens/RecipeDetail.tsx']
+  future:
+    - action: 'Add UI tests for detail layout, FAB interactions, and swipe-back gesture'
+      refs:
+        - 'apps/mobile/src/screens/__tests__/RecipeLibrary.spec.tsx'
+        - 'apps/mobile/src/screens/__tests__/RecipeDetail.spec.tsx'

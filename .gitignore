@@ -50,3 +50,8 @@ Thumbs.db
 # Temporary files
 tmp/
 temp/
+# BMAD (local only)
+# BMAD (local only)
+# BMAD (local only)
+.bmad-core/
+.bmad-*/

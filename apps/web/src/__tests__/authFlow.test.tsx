@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
 import AuthSuccessPage from '../pages/AuthSuccessPage';
@@ -9,6 +10,8 @@ import ProtectedRoute from '../components/ProtectedRoute';
 import { useAuthStore } from '../stores/authStore';
 import * as authService from '../services/authService';
 import type { User } from '@bmad/shared/types/auth';
+import { ThemeProvider } from '../context/ThemeContext';
+import AppShell from '../components/layout/AppShell';
 
 // Mock auth service
 vi.mock('../services/authService', () => ({
@@ -17,6 +20,22 @@ vi.mock('../services/authService', () => ({
   logout: vi.fn(),
   refreshAccessToken: vi.fn(),
   getCurrentUser: vi.fn(),
+}));
+
+vi.mock('../hooks/useRecipes', () => ({
+  useRecipes: () => ({
+    data: { data: [], pagination: { page: 1, pageSize: 20, total: 0, totalPages: 1 } },
+    isLoading: false,
+    error: null,
+  }),
+}));
+
+vi.mock('../hooks/useTagCategories', () => ({
+  useTagCategories: () => ({
+    data: [],
+    isLoading: false,
+    error: null,
+  }),
 }));
 
 // Helper to create complete mock user
@@ -30,6 +49,22 @@ const createMockUser = (overrides?: Partial<User>): User => ({
   ...overrides,
 });
 
+// Helper to wrap with QueryClient
+const renderWithQueryClient = (component: React.ReactElement) => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>{component}</ThemeProvider>
+    </QueryClientProvider>
+  );
+};
+
 describe('Authentication Flow Integration Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -41,6 +76,7 @@ describe('Authentication Flow Integration Tests', () => {
       isLoading: false,
       error: null,
     });
+    window.localStorage.setItem('bmad-onboarding-complete', 'true');
   });
 
   afterEach(() => {
@@ -48,7 +84,7 @@ describe('Authentication Flow Integration Tests', () => {
   });
 
   describe('Registration Flow', () => {
-    it('should complete full registration flow and redirect to recipes', async () => {
+    it('should complete full registration flow and redirect to onboarding', async () => {
       const mockResponse = {
         user: createMockUser({ email: 'newuser@example.com', firstName: 'Jane' }),
         accessToken: 'mock-access-token',
@@ -56,10 +92,11 @@ describe('Authentication Flow Integration Tests', () => {
       };
       vi.mocked(authService.register).mockResolvedValue(mockResponse);
 
-      render(
+      renderWithQueryClient(
         <MemoryRouter initialEntries={['/register']}>
           <Routes>
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/onboarding" element={<div>Onboarding</div>} />
             <Route
               path="/recipes"
               element={
@@ -94,9 +131,9 @@ describe('Authentication Flow Integration Tests', () => {
         );
       });
 
-      // Should redirect to recipes page
+      // Should redirect to onboarding
       await waitFor(() => {
-        expect(screen.getByText(/Recipes Page/i)).toBeInTheDocument();
+        expect(screen.getByText(/Onboarding/i)).toBeInTheDocument();
       });
     });
   });
@@ -110,7 +147,7 @@ describe('Authentication Flow Integration Tests', () => {
       };
       vi.mocked(authService.login).mockResolvedValue(mockResponse);
 
-      render(
+      renderWithQueryClient(
         <MemoryRouter initialEntries={['/login']}>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
@@ -144,14 +181,16 @@ describe('Authentication Flow Integration Tests', () => {
 
       // Should redirect to recipes page
       await waitFor(() => {
-        expect(screen.getByText(/Recipes Page/i)).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', { name: 'Recipe Library' })
+        ).toBeInTheDocument();
       });
     });
   });
 
   describe('Protected Route', () => {
     it('should redirect unauthenticated users to login', async () => {
-      render(
+      renderWithQueryClient(
         <MemoryRouter initialEntries={['/recipes']}>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
@@ -183,7 +222,7 @@ describe('Authentication Flow Integration Tests', () => {
         error: null,
       });
 
-      render(
+      renderWithQueryClient(
         <MemoryRouter initialEntries={['/recipes']}>
           <Routes>
             <Route
@@ -200,8 +239,9 @@ describe('Authentication Flow Integration Tests', () => {
 
       // Should see recipes page
       await waitFor(() => {
-        expect(screen.getByText(/Recipes Page/i)).toBeInTheDocument();
-        expect(screen.getByText(/Welcome, John!/i)).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', { name: 'Recipe Library' })
+        ).toBeInTheDocument();
       });
     });
   });
@@ -211,7 +251,7 @@ describe('Authentication Flow Integration Tests', () => {
       const mockUser = createMockUser({ email: 'oauth@example.com', firstName: 'OAuth' });
       vi.mocked(authService.getCurrentUser).mockResolvedValue(mockUser);
 
-      render(
+      renderWithQueryClient(
         <MemoryRouter initialEntries={['/auth/success?token=oauth-token-123']}>
           <Routes>
             <Route path="/auth/success" element={<AuthSuccessPage />} />
@@ -236,12 +276,14 @@ describe('Authentication Flow Integration Tests', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByText(/Recipes Page/i)).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', { name: 'Recipe Library' })
+        ).toBeInTheDocument();
       });
     });
 
     it('should handle missing token in OAuth callback', async () => {
-      render(
+      renderWithQueryClient(
         <MemoryRouter initialEntries={['/auth/success']}>
           <Routes>
             <Route path="/auth/success" element={<AuthSuccessPage />} />
@@ -257,7 +299,7 @@ describe('Authentication Flow Integration Tests', () => {
     });
 
     it('should handle OAuth error parameter', async () => {
-      render(
+      renderWithQueryClient(
         <MemoryRouter initialEntries={['/auth/success?error=access_denied']}>
           <Routes>
             <Route path="/auth/success" element={<AuthSuccessPage />} />
@@ -286,24 +328,25 @@ describe('Authentication Flow Integration Tests', () => {
         error: null,
       });
 
-      render(
+      renderWithQueryClient(
         <MemoryRouter initialEntries={['/recipes']}>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route
-              path="/recipes"
               element={
                 <ProtectedRoute>
-                  <RecipesPage />
+                  <AppShell />
                 </ProtectedRoute>
               }
-            />
+            >
+              <Route path="/recipes" element={<RecipesPage />} />
+            </Route>
           </Routes>
         </MemoryRouter>
       );
 
       // Click logout button
-      const logoutButton = screen.getByRole('button', { name: /logout/i });
+      const logoutButton = screen.getByRole('button', { name: /log out/i });
       fireEvent.click(logoutButton);
 
       // Wait for logout and redirect

@@ -186,7 +186,7 @@ describe('RegisterPage', () => {
 
     await waitFor(() => {
       expect(mockRegister).toHaveBeenCalledWith('john@example.com', 'Password123', 'John');
-      expect(mockNavigate).toHaveBeenCalledWith('/recipes');
+      expect(mockNavigate).toHaveBeenCalledWith('/onboarding');
     });
   });
 

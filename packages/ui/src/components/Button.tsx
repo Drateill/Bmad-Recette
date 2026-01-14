@@ -13,22 +13,15 @@ export function Button({
   variant = 'primary',
   disabled = false
 }: ButtonProps) {
-  const baseStyle: React.CSSProperties = {
-    padding: '10px 20px',
-    borderRadius: '4px',
-    border: 'none',
-    cursor: disabled ? 'not-allowed' : 'pointer',
-    fontSize: '16px',
-    fontWeight: '500',
-  };
-
-  const variantStyle: React.CSSProperties = variant === 'primary'
-    ? { backgroundColor: '#007bff', color: '#fff' }
-    : { backgroundColor: '#6c757d', color: '#fff' };
-
+  const baseClass =
+    'inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-semibold transition-colors';
+  const variantClass =
+    variant === 'primary'
+      ? 'bg-brand-primary text-text-inverse hover:bg-brand-primary-dark'
+      : 'border border-border-subtle text-text-secondary hover:bg-surface-muted';
   return (
     <button
-      style={{ ...baseStyle, ...variantStyle, opacity: disabled ? 0.6 : 1 }}
+      className={`${baseClass} ${variantClass} ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}
       onClick={onClick}
       disabled={disabled}
     >

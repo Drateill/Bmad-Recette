@@ -64,6 +64,8 @@ model Recipe {
 
   @@index([userId])
   @@index([title])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, title])
   @@map("recipes")
 }
 
